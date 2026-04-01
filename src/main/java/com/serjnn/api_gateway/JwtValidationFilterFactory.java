@@ -1,63 +1,53 @@
 package com.serjnn.api_gateway;
 
-
-import org.springframework.cloud.gateway.filter.GatewayFilter;
-import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-
+import org.springframework.web.client.RestClient;
+import org.springframework.web.servlet.function.HandlerFilterFunction;
+import org.springframework.web.servlet.function.ServerResponse;
 
 @Component
-public class JwtValidationFilterFactory extends AbstractGatewayFilterFactory<JwtValidationFilterFactory.Config> {
+public class JwtValidationFilterFactory {
+    private static final Logger log = LoggerFactory.getLogger(JwtValidationFilterFactory.class);
+    private final RestClient restClient;
 
-    private final WebClient webClient;
-
-    public static class Config {
+    public JwtValidationFilterFactory(RestClient.Builder restClientBuilder) {
+        this.restClient = restClientBuilder.build();
     }
 
-    public JwtValidationFilterFactory(WebClient.Builder webClientBuilder) {
-        super(Config.class);
-        this.webClient = webClientBuilder.build();
-    }
-
-    @Override
-    public GatewayFilter apply(Config config) {
-        return (exchange, chain) -> {
-
-
-            String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+    public HandlerFilterFunction<ServerResponse, ServerResponse> validateJwt() {
+        return (request, next) -> {
+            log.info("Validating JWT token for request: {}", request.uri());
+            String authHeader = request.headers().firstHeader(HttpHeaders.AUTHORIZATION);
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
+                log.warn("Unauthorized request: missing or invalid Authorization header");
+                return ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
             }
 
             String jwtToken = authHeader.substring(7);
+            String validationUrl = "http://client/api/v1/secured"; // Using http:// with @LoadBalanced RestClient
 
-            String validationUrl = "lb://client/api/v1/secured";
-            return webClient.get()
-                    .uri(validationUrl)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .flatMap(response -> {
-                        if (response.getStatusCode().is2xxSuccessful()) {
+            try {
+                var response = restClient.get()
+                        .uri(validationUrl)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken)
+                        .retrieve()
+                        .toBodilessEntity();
 
-                            return chain.filter(exchange);
-                        } else {
-
-                            exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-                            return exchange.getResponse().setComplete();
-                        }
-                    })
-                    .onErrorResume(e -> {
-
-                        exchange.getResponse().setStatusCode(HttpStatus.BAD_GATEWAY);
-                        return exchange.getResponse().setComplete();
-                    });
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    log.info("JWT token validated successfully");
+                    return next.handle(request);
+                } else {
+                    log.warn("Forbidden request: JWT validation failed with status: {}", response.getStatusCode());
+                    return ServerResponse.status(HttpStatus.FORBIDDEN).build();
+                }
+            } catch (Exception e) {
+                log.error("Error validating JWT token: {}", e.getMessage());
+                return ServerResponse.status(HttpStatus.BAD_GATEWAY).build();
+            }
         };
     }
 }
-

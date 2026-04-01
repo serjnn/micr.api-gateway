@@ -1,18 +1,18 @@
 package com.serjnn.api_gateway;
 
-import  org.springframework.boot.SpringApplication;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 @SpringBootApplication
 public class ApiGatewayApplication {
 
     @Bean
     @LoadBalanced
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
     }
 
 
