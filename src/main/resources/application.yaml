@@ -10,6 +10,10 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      mvc:
+        proxy:
+          observation:
+            enabled: true
 
 management:
 
