@@ -21,31 +21,32 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Testcontainers
+//@Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 public class SystemIntegrationTest {
 
     private static final String COMPOSE_FILE = "../docker-compose.yml";
     private static final int GATEWAY_PORT = 8989;
 
-    @Container
-    public static DockerComposeContainer<?> environment =
-            new DockerComposeContainer<>(new File(COMPOSE_FILE))
-                    .withExposedService("api-gateway", GATEWAY_PORT,
-                            Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
-                    .withExposedService("product-service", 7022, Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
-                    .withExposedService("client-service", 7015, Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
-                    .withExposedService("discount-service", 7005, Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
-                    .withExposedService("saga-orchestrator", 7018, Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
-                    .withLocalCompose(true);
+//    @Container
+//    public static DockerComposeContainer<?> environment =
+//            new DockerComposeContainer<>(new File(COMPOSE_FILE))
+//                    .withExposedService("api-gateway", GATEWAY_PORT,
+//                            Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
+//                    .withExposedService("product-service", 7022, Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
+//                    .withExposedService("client-service", 7015, Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
+//                    .withExposedService("discount-service", 7005, Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
+//                    .withExposedService("saga-orchestrator", 7018, Wait.forHttp("/actuator/health").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(5)))
+//                    .withLocalCompose(true);
 
     private static RestClient restClient;
     private static ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeAll
     public static void setUp() {
-        String gatewayUrl = "http://" + environment.getServiceHost("api-gateway", GATEWAY_PORT)
-                + ":" + environment.getServicePort("api-gateway", GATEWAY_PORT);
+//        String gatewayUrl = "http://" + environment.getServiceHost("api-gateway", GATEWAY_PORT)
+//                + ":" + environment.getServicePort("api-gateway", GATEWAY_PORT);
+        String gatewayUrl = "http://localhost:9000";
         restClient = RestClient.builder()
                 .baseUrl(gatewayUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -99,13 +100,14 @@ public class SystemIntegrationTest {
                 "category", "ELECTRONICS"
         );
 
-        Long productId = restClient.post()
+        String response = restClient.post()
                 .uri("/product/api/v1/products")
                 .body(newProduct)
                 .retrieve()
-                .body(Long.class);
+                .body(String.class);
 
-        assertNotNull(productId);
+        assertNotNull(response);
+        Long productId = Long.parseLong(response);
 
         // 6. Add Discount
         List<Map<String, Object>> discounts = List.of(
