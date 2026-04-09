@@ -1,0 +1,298 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: product-postgres
+    ports:
+      - "5419:5432"
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d product_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: product-redis
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: product-zipkin
+    ports:
+      - "9411:9411"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  eureka:
+    build: ./micr.EurekaServer
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8761/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api-gateway:
+    build: ./micr.api-gateway
+    container_name: api-gateway
+    ports:
+      - "9000:8989"
+    depends_on:
+      eureka:
+        condition: service_healthy
+    environment:
+      - EUREKA_SERVER_URL=http://eureka:8761/eureka/
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  bucket-service:
+    build: ./micr.BucketService
+    container_name: bucket-service
+    ports:
+      - "7001:7001"
+    depends_on:
+      eureka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - EUREKA_SERVER_URL=http://eureka:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres:5432/bucket_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  client-service:
+    build: ./micr.Client-service
+    container_name: client-service
+    ports:
+      - "7015:7015"
+    depends_on:
+      eureka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - EUREKA_SERVER_URL=http://eureka:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres:5432/client_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  discount-service:
+    build: ./micr.DiscountService
+    container_name: discount-service
+    ports:
+      - "7005:7005"
+    depends_on:
+      eureka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - EUREKA_SERVER_URL=http://eureka:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres:5432/discount_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  notification-service:
+    build: ./micr.NotificationService
+    container_name: notification-service
+    ports:
+      - "7099:7099"
+    depends_on:
+      eureka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - EUREKA_SERVER_URL=http://eureka:8761/eureka/
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  order-details-service:
+    build: ./micr.OrderDetailsService
+    container_name: order-details-service
+    ports:
+      - "7003:7003"
+    depends_on:
+      eureka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - EUREKA_SERVER_URL=http://eureka:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres:5432/order_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  product-service:
+    build: ./micr.ProductService
+    container_name: product-service
+    ports:
+      - "7022:7022"
+    depends_on:
+      eureka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - EUREKA_SERVER_URL=http://eureka:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres:5432/product_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  saga-orchestrator:
+    build: ./micr.saga-orchestrator
+    container_name: saga-orchestrator
+    ports:
+      - "7018:7018"
+    depends_on:
+      eureka:
+        condition: service_healthy
+    environment:
+      - EUREKA_SERVER_URL=http://eureka:8761/eureka/
+      - BUCKET_CLEAR_URL=http://bucket/api/v1/buckets/{clientId}
+      - BUCKET_RESTORE_URL=http://bucket/api/v1/buckets/restore
+      - CLIENT_DEDUCT_URL=http://client/api/v1/clients/transactions/deduct
+      - CLIENT_RESTORE_URL=http://client/api/v1/clients/transactions/restore
+      - ORDER_CREATE_URL=http://order/api/v1/orders
+      - ORDER_REMOVE_URL=http://order/api/v1/orders/{orderId}
+      - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+      - JAVA_TOOL_OPTIONS=-Xmx256m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+

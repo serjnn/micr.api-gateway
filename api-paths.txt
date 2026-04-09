@@ -1,0 +1,68 @@
+API Gateway Base URL: http://localhost:9000
+
+All requests from the frontend must use the prefix of the microservice.
+The Gateway is configured with 'lower-case-service-id: true'.
+
+================================================================================
+PRODUCT SERVICE (Service ID: product)
+================================================================================
+GET    http://localhost:9000/product/api/v1/products
+GET    http://localhost:9000/product/api/v1/products/{id}
+POST   http://localhost:9000/product/api/v1/products/by-ids
+GET    http://localhost:9000/product/api/v1/products/category/{cat}
+POST   http://localhost:9000/product/api/v1/products (Returns Product ID)
+POST   http://localhost:9000/product/api/v1/products/{productId}/subscribe/{clientId}
+
+================================================================================
+CLIENT SERVICE (Service ID: client)
+================================================================================
+POST   http://localhost:9000/client/api/v1/clients/register
+POST   http://localhost:9000/client/api/v1/auth/login
+POST   http://localhost:9000/client/api/v1/auth/validate
+GET    http://localhost:9000/client/api/v1/clients/me
+PATCH  http://localhost:9000/client/api/v1/clients/{clientId}/balance
+PATCH  http://localhost:9000/client/api/v1/clients/me/address
+POST   http://localhost:9000/client/api/v1/clients/transactions/restore
+POST   http://localhost:9000/client/api/v1/clients/transactions/deduct
+
+================================================================================
+BUCKET SERVICE (Service ID: Bucket) -> /bucket
+================================================================================
+POST   http://localhost:9000/bucket/api/v1/buckets/{clientId}/products/{productId}
+DELETE http://localhost:9000/bucket/api/v1/buckets/{clientId}/products/{productId}
+GET    http://localhost:9000/bucket/api/v1/buckets/{clientId}
+DELETE http://localhost:9000/bucket/api/v1/buckets/{clientId}
+POST   http://localhost:9000/bucket/api/v1/buckets/restore
+
+================================================================================
+ORDER SERVICE (Service ID: order)
+================================================================================
+GET    http://localhost:9000/order/api/v1/orders/client/{id}
+POST   http://localhost:9000/order/api/v1/orders
+DELETE http://localhost:9000/order/api/v1/orders/{uuid}
+
+================================================================================
+DISCOUNT SERVICE (Service ID: discount)
+================================================================================
+GET    http://localhost:9000/discount/api/v1/discounts
+POST   http://localhost:9000/discount/api/v1/discounts
+GET    http://localhost:9000/discount/api/v1/discounts/{productId}
+
+================================================================================
+SAGA ORCHESTRATOR (Service ID: orchestrator)
+================================================================================
+POST   http://localhost:9000/orchestrator/api/v1
+
+================================================================================
+NOTIFICATION SERVICE (Service ID: notificationService) -> /notificationservice
+================================================================================
+WebSocket Endpoint: ws://localhost:9000/notificationservice/ws
+Topic Prefix: /topic
+User Topic Prefix: /topic/client/
+App Destination Prefix: /app
+
+================================================================================
+ACTUATOR (Health & Info - Available for all services)
+================================================================================
+GET    http://localhost:9000/{service-id}/actuator/health
+GET    http://localhost:9000/{service-id}/actuator/info
