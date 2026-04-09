@@ -1,0 +1,612 @@
+{
+	"info": {
+		"_postman_id": "8d3e9c5a-6b7d-4e2a-9f1c-3b4a5d6e7f8g",
+		"name": "Ecommerce Microservices (via Gateway)",
+		"description": "Collection for all microservices operations routed through the API Gateway on port 9000.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Product Service",
+			"item": [
+				{
+					"name": "Get All Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/product/api/v1/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product",
+								"api",
+								"v1",
+								"products"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/product/api/v1/products/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product",
+								"api",
+								"v1",
+								"products",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Products by IDs",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [1, 2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/product/api/v1/products/by-ids",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product",
+								"api",
+								"v1",
+								"products",
+								"by-ids"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Products by Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/product/api/v1/products/category/ELECTRONICS",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product",
+								"api",
+								"v1",
+								"products",
+								"category",
+								"ELECTRONICS"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Product",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Smartphone\",\n    \"description\": \"Latest flagship\",\n    \"price\": 999.99,\n    \"category\": \"ELECTRONICS\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/product/api/v1/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product",
+								"api",
+								"v1",
+								"products"
+							]
+						}
+					}
+				},
+				{
+					"name": "Subscribe to Product Discounts",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/product/api/v1/products/1/subscribe/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product",
+								"api",
+								"v1",
+								"products",
+								"1",
+								"subscribe",
+								"1"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Client Service",
+			"item": [
+				{
+					"name": "Register Client",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mail\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/client/api/v1/clients/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"client",
+								"api",
+								"v1",
+								"clients",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mail\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/client/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"client",
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Current Client (Me)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/client/api/v1/clients/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"client",
+								"api",
+								"v1",
+								"clients",
+								"me"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Balance",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/client/api/v1/clients/1/balance?amount=100.0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"client",
+								"api",
+								"v1",
+								"clients",
+								"1",
+								"balance"
+							],
+							"query": [
+								{
+									"key": "amount",
+									"value": "100.0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update My Address",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/client/api/v1/clients/me/address?address=New%20Address",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"client",
+								"api",
+								"v1",
+								"clients",
+								"me",
+								"address"
+							],
+							"query": [
+								{
+									"key": "address",
+									"value": "New%20Address"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Bucket Service",
+			"item": [
+				{
+					"name": "Add to Bucket",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/bucket/api/v1/buckets/1/products/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"bucket",
+								"api",
+								"v1",
+								"buckets",
+								"1",
+								"products",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Client Bucket",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/bucket/api/v1/buckets/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"bucket",
+								"api",
+								"v1",
+								"buckets",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Remove from Bucket",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/bucket/api/v1/buckets/1/products/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"bucket",
+								"api",
+								"v1",
+								"buckets",
+								"1",
+								"products",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Clear Bucket",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/bucket/api/v1/buckets/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"bucket",
+								"api",
+								"v1",
+								"buckets",
+								"1"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Order Service",
+			"item": [
+				{
+					"name": "Get Order History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/order/api/v1/orders/client/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"order",
+								"api",
+								"v1",
+								"orders",
+								"client",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Order",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/order/api/v1/orders/550e8400-e29b-41d4-a716-446655440000",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"order",
+								"api",
+								"v1",
+								"orders",
+								"550e8400-e29b-41d4-a716-446655440000"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Saga Orchestrator",
+			"item": [
+				{
+					"name": "Start Checkout SAGA",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderId\": \"{{$guid}}\",\n    \"clientID\": 1,\n    \"items\": [\n        {\n            \"id\": 1,\n            \"name\": \"Laptop\",\n            \"quantity\": 1,\n            \"price\": 1200.00\n        }\n    ],\n    \"totalSum\": 1200.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orchestrator/api/v1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orchestrator",
+								"api",
+								"v1"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Discount Service",
+			"item": [
+				{
+					"name": "Get All Discounts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/discount/api/v1/discounts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"discount",
+								"api",
+								"v1",
+								"discounts"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Product Discount",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/discount/api/v1/discounts/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"discount",
+								"api",
+								"v1",
+								"discounts",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create/Update Discounts",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"productId\": 1,\n        \"discount\": 0.20\n    }\n]"
+						},
+						"url": {
+							"raw": "{{base_url}}/discount/api/v1/discounts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"discount",
+								"api",
+								"v1",
+								"discounts"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Actuator & Health",
+			"item": [
+				{
+					"name": "Gateway Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/actuator/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					}
+				},
+				{
+					"name": "Product Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/product/actuator/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product",
+								"actuator",
+								"health"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:9000",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "your_token_here",
+			"type": "string"
+		}
+	]
+}
