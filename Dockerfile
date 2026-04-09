@@ -1,5 +1,5 @@
 # Build stage
-FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # Copy pom.xml and resolve dependencies
@@ -9,15 +9,15 @@ RUN mvn dependency:resolve-plugins -B && \
 
 # Copy source code and build
 COPY src ./src
-RUN mvn package -DskipTests -B && ls -lh target/
+RUN mvn clean package -DskipTests -B
 
 # Runtime stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Copy built jar from build stage
-COPY --from=build /app/target/api-gateway.jar /app/api-gateway.jar
+COPY --from=build /app/target/*.jar /app/app.jar
 
 EXPOSE 8989
 
-ENTRYPOINT ["java", "-jar", "/app/api-gateway.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

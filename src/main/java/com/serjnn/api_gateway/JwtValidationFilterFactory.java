@@ -28,10 +28,10 @@ public class JwtValidationFilterFactory {
             }
 
             String jwtToken = authHeader.substring(7);
-            String validationUrl = "http://client/api/v1/secured"; // Using http:// with @LoadBalanced RestClient
+            String validationUrl = "http://client/api/v1/auth/validate";
 
             try {
-                var response = restClient.get()
+                var response = restClient.post()
                         .uri(validationUrl)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken)
                         .retrieve()
@@ -45,7 +45,7 @@ public class JwtValidationFilterFactory {
                     return ServerResponse.status(HttpStatus.FORBIDDEN).build();
                 }
             } catch (Exception e) {
-                log.error("Error validating JWT token: {}", e.getMessage());
+                log.error("Error validating JWT token at {}: {}", validationUrl, e.getMessage(), e);
                 return ServerResponse.status(HttpStatus.BAD_GATEWAY).build();
             }
         };

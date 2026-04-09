@@ -31,8 +31,13 @@ eureka:
 
 logging:
   pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
     level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
   level:
+    root: info
+    org.springframework: warn
+    com.zaxxer.hikari: warn
+    org.hibernate: warn
+    com.netflix.discovery: warn
+    com.serjnn: info
     org.springframework.cloud.gateway: DEBUG
-    root: INFO
-    com.serjnn: DEBUG

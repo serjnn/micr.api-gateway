@@ -31,6 +31,7 @@ public class GatewayConfig {
                 .build()
                 .and(baseRoute("order", "lb://order", true))
                 .and(baseRoute("client", "lb://client", false))
+                .and(baseRoute("discount", "lb://discount", false))
                 .and(baseRoute("bucket", "lb://bucket", true))
                 .and(baseRoute("orchestrator", "lb://orchestrator", true));
     }
