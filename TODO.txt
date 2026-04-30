@@ -1,0 +1,5 @@
+TODO
+async steps in orchestrator
+provide tracing throgh redis pub sub
+unique constraints everywhere
+orchestrator idempotence
