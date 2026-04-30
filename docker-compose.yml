@@ -5,7 +5,7 @@ services:
     ports:
       - "5419:5432"
     environment:
-      POSTGRES_DB: product_db
+      POSTGRES_DB: micr-db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -19,7 +19,7 @@ services:
           cpus: '0.25'
           memory: 128M
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d product_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d micr-db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -113,11 +113,12 @@ services:
         condition: service_healthy
     environment:
       - EUREKA_SERVER_URL=http://eureka:8761/eureka/
-      - DB_URL=jdbc:postgresql://postgres:5432/bucket_db
+      - DB_URL=jdbc:postgresql://postgres:5432/micr-db?currentSchema=bucket_schema
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
       - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - SPRING_FLYWAY_DEFAULT_SCHEMA=bucket_schema
       - JAVA_TOOL_OPTIONS=-Xmx256m
     deploy:
       resources:
@@ -140,11 +141,12 @@ services:
         condition: service_healthy
     environment:
       - EUREKA_SERVER_URL=http://eureka:8761/eureka/
-      - DB_URL=jdbc:postgresql://postgres:5432/client_db
+      - DB_URL=jdbc:postgresql://postgres:5432/micr-db?currentSchema=client_schema
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
       - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - SPRING_FLYWAY_DEFAULT_SCHEMA=client_schema
       - JAVA_TOOL_OPTIONS=-Xmx256m
     deploy:
       resources:
@@ -169,13 +171,14 @@ services:
         condition: service_healthy
     environment:
       - EUREKA_SERVER_URL=http://eureka:8761/eureka/
-      - DB_URL=jdbc:postgresql://postgres:5432/discount_db
+      - DB_URL=jdbc:postgresql://postgres:5432/micr-db?currentSchema=discount_schema
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
       - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - SPRING_FLYWAY_DEFAULT_SCHEMA=discount_schema
       - JAVA_TOOL_OPTIONS=-Xmx256m
     deploy:
       resources:
@@ -223,11 +226,12 @@ services:
         condition: service_healthy
     environment:
       - EUREKA_SERVER_URL=http://eureka:8761/eureka/
-      - DB_URL=jdbc:postgresql://postgres:5432/order_db
+      - DB_URL=jdbc:postgresql://postgres:5432/micr-db?currentSchema=order_schema
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
       - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - SPRING_FLYWAY_DEFAULT_SCHEMA=order_schema
       - JAVA_TOOL_OPTIONS=-Xmx256m
     deploy:
       resources:
@@ -252,12 +256,13 @@ services:
         condition: service_healthy
     environment:
       - EUREKA_SERVER_URL=http://eureka:8761/eureka/
-      - DB_URL=jdbc:postgresql://postgres:5432/product_db
+      - DB_URL=jdbc:postgresql://postgres:5432/micr-db?currentSchema=product_schema
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - REDIS_HOST=redis
       - ZIPKIN_URL=http://zipkin:9411/api/v2/spans
       - SPRING_FLYWAY_VALIDATE_ON_MIGRATE=false
+      - SPRING_FLYWAY_DEFAULT_SCHEMA=product_schema
       - JAVA_TOOL_OPTIONS=-Xmx256m
     deploy:
       resources:
@@ -294,5 +299,6 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
+
 
 
