@@ -1,0 +1,36 @@
+# Problems and Refactoring Issues for Microservices
+
+This document outlines identified issues and refactoring opportunities for `micr.BucketService`, `micr.Client-service`, and `micr.saga-orchestrator`.
+
+## 1. General Architectural & Project-wide Issues
+
+*   **Inconsistent Naming Conventions:**
+    *   **Folder names:** Mixed kebab-case (`micr.Client-service`, `micr.saga-orchestrator`) and PascalCase (`micr.BucketService`).
+    *   **Package names:** Using PascalCase (e.g., `com.serjnn.BucketService`) instead of the standard Java lowercase (e.g., `com.serjnn.bucketservice`).
+*   **DTO Duplication:** `OrderDTO`, `BucketItemDTO`, and others are duplicated across all three services. This leads to maintenance overhead when a field changes. Consider a shared "common-dto" module or using a more robust schema definition.
+*   **Missing Centralized Exception Handling:** No `@ControllerAdvice` or `ProblemDetail` implementation was found in the services. Errors are often caught and rethrown as generic `RuntimeException` or logged without proper API error responses.
+*   **Logging Inconsistency:** While SLF4J is used, the level and detail of logging vary. Some services use `log.debug` for core flow, others use `log.info`.
+*   **Idempotency and Traceability:** No global `TransactionId` or `CorrelationId` is consistently passed between services in the Saga. This is critical for idempotency in case of retries.
+
+## 2. micr.BucketService
+
+*   **Outdated HTTP Client:** Uses `RestTemplate`. It should be refactored to use `RestClient` (consistent with SagaOrchestrator) or Spring Cloud OpenFeign for better abstraction.
+*   **Brittle Error Handling:** `findOrCreateBucket` uses a generic `catch (Exception e)` for conflict handling. This should be more specific (e.g., `DataAccessException`) and better documented.
+*   **Dependency Inconsistency:** Uses `springdoc-openapi` version 2.1.0 (other services use 2.6.0).
+*   **Hardcoded Logic:** `addProduct` hardcodes `quantity` to 1. The API should support adding specific quantities.
+*   **Missing Unit Tests:** While integration tests exist, there is a lack of unit tests for the core service logic in `BucketService.java`.
+
+## 3. micr.Client-service
+
+*   **Security Context Coupling:** `ClientService.findCurrentClient()` directly accesses `SecurityContextHolder`. This makes the service hard to test in isolation and tightly couples it to Spring Security. Consider passing the user's identity as a parameter.
+*   **Auth + Client Service Mix:** The service combines identity management (Auth) with client data management. These could be separated for better SRP (Single Responsibility Principle).
+*   **JWT Version:** Uses `jjwt` 0.11.5. Consider upgrading to 0.12.x which has a cleaner API.
+*   **Manual Object Copying:** `setAddress` creates a new `Client` object manually. Using a builder pattern (Lombok `@Builder`) or a map-based update would be cleaner.
+*   **Transactional Exception Handling:** `deductMoney` catches `DataIntegrityViolationException` and throws a generic `RuntimeException`. Using custom domain exceptions (e.g., `InsufficientFundsException`) would improve error handling.
+
+## 4. micr.saga-orchestrator
+
+*   **No Orchestrator Persistence:** The Saga state is kept only in memory during the execution. If the service restarts mid-saga, the transaction is "lost" in an inconsistent state. A database to track saga progress is recommended.
+*   **Basic Compensation Logic:** The `revert` logic uses Resilience4j retries, but if it fails after all retries, it only logs a "Critical" error. There should be a strategy for manual intervention or a DLQ (Dead Letter Queue).
+*   **Service Discovery vs. Hardcoded URLs:** Uses `@Value` for service URLs. Although Eureka is present in the project, the orchestrator should ideally use Feign with service names instead of manual URL construction.
+*   **Step Implementation Duplication:** `BucketStep` and `ClientBalanceStep` have very similar boilerplate code for `process` and `revert`. This could be abstracted into a `BaseSagaStep`.
