@@ -1,6 +1,19 @@
 TODO
-async steps in orchestrator
-provide tracing throgh redis pub sub
+async steps in orchestrator(all steps go at the same time)
+zipkin tracing through kafka,redis
 unique constraints everywhere
 orchestrator idempotence
 exceptions
+
+
+kafka:
+    consumer as separate process, access product's db
+    consumer dlq / retries
+
+
+redis:
+    popular products ttl, cached stampede -> distributed lock for first thread to put it back
+    idempotency key removing via version of remover
+    cache warming -> ttl + jitter (preventing cache avalanche (massive cache miss))
+
+some async job with redis distributed lock(
