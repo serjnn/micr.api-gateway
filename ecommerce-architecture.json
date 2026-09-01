@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "E-Commerce Microservices Architecture",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "saga-checkout",
+        "label": "Distributed SAGA Checkout",
+        "focus": ["clients", "gateway", "sagaorch", "clientsvc", "bucketsvc", "ordersvc", "postgres"],
+        "note": "Multi-step checkout coordination across client balance, cart clearing, and order creation with backward compensation."
+      },
+      {
+        "id": "discount-pipeline",
+        "label": "Event-Driven Notifications",
+        "focus": ["discountsvc", "postgres", "kafka", "productsvc", "redis", "notifsvc", "clients"],
+        "note": "Transactional outbox events published to Kafka, cached in Redis, and pushed to clients via WebSockets."
+      },
+      {
+        "id": "ingress-discovery",
+        "label": "Ingress & Edge Routing",
+        "focus": ["clients", "gateway", "eureka", "sagaorch", "bucketsvc", "productsvc"],
+        "note": "Spring Cloud Gateway dynamic route resolution via Netflix Eureka service registry."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "clients",
+      "type": "external",
+      "label": "Client Apps",
+      "sublabel": "Browser / Mobile SPA",
+      "pos": [40, 260],
+      "size": [130, 60]
+    },
+    {
+      "id": "eureka",
+      "type": "cloud",
+      "label": "Eureka Registry",
+      "sublabel": "Discovery :8761",
+      "pos": [40, 70],
+      "size": [130, 60]
+    },
+    {
+      "id": "gateway",
+      "type": "cloud",
+      "label": "API Gateway",
+      "sublabel": "Spring Cloud :9000",
+      "brand": "spring",
+      "pos": [240, 260],
+      "size": [140, 60]
+    },
+    {
+      "id": "notifsvc",
+      "type": "backend",
+      "label": "Notification Svc",
+      "sublabel": "STOMP WS :7099",
+      "pos": [240, 460],
+      "size": [140, 60]
+    },
+    {
+      "id": "clientsvc",
+      "type": "backend",
+      "label": "Client Service",
+      "sublabel": "Auth & Balance :7015",
+      "brand": "spring",
+      "pos": [460, 70],
+      "size": [140, 60]
+    },
+    {
+      "id": "sagaorch",
+      "type": "backend",
+      "label": "SAGA Orchestrator",
+      "sublabel": "Checkout :7018",
+      "brand": "spring",
+      "pos": [460, 260],
+      "size": [140, 60]
+    },
+    {
+      "id": "bucketsvc",
+      "type": "backend",
+      "label": "Bucket Service",
+      "sublabel": "Cart Manager :7001",
+      "brand": "spring",
+      "pos": [460, 460],
+      "size": [140, 60]
+    },
+    {
+      "id": "ordersvc",
+      "type": "backend",
+      "label": "Order Service",
+      "sublabel": "Order Details :7003",
+      "brand": "spring",
+      "pos": [680, 70],
+      "size": [140, 60]
+    },
+    {
+      "id": "productsvc",
+      "type": "backend",
+      "label": "Product Service",
+      "sublabel": "Catalog & Subs :7022",
+      "brand": "spring",
+      "pos": [680, 260],
+      "size": [140, 60]
+    },
+    {
+      "id": "discountsvc",
+      "type": "backend",
+      "label": "Discount Service",
+      "sublabel": "Outbox & Promo :7005",
+      "brand": "spring",
+      "pos": [680, 460],
+      "size": [140, 60]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "5 Schemas :5419",
+      "brand": "postgresql",
+      "pos": [940, 70],
+      "size": [140, 60]
+    },
+    {
+      "id": "redis",
+      "type": "database",
+      "label": "Redis Cache",
+      "sublabel": "Discounts :6379",
+      "brand": "redis",
+      "pos": [940, 260],
+      "size": [140, 60]
+    },
+    {
+      "id": "kafka",
+      "type": "messagebus",
+      "label": "Apache Kafka",
+      "sublabel": "Event Stream",
+      "brand": "apache-kafka",
+      "pos": [940, 460],
+      "size": [140, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "E-Commerce Microservices System",
+      "wraps": [
+        "eureka",
+        "gateway",
+        "notifsvc",
+        "clientsvc",
+        "sagaorch",
+        "bucketsvc",
+        "ordersvc",
+        "productsvc",
+        "discountsvc",
+        "redis",
+        "postgres",
+        "kafka"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "SAGA Transaction Scope",
+      "wraps": [
+        "clientsvc",
+        "sagaorch",
+        "bucketsvc",
+        "ordersvc"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "client-http",
+      "from": "clients",
+      "to": "gateway",
+      "label": "HTTPS :9000",
+      "variant": "emphasis"
+    },
+    {
+      "id": "client-ws",
+      "from": "notifsvc",
+      "to": "clients",
+      "label": "STOMP push",
+      "fromSide": "left",
+      "toSide": "bottom"
+    },
+    {
+      "id": "gw-discovery",
+      "from": "gateway",
+      "to": "eureka",
+      "label": "registry",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "gw-saga",
+      "from": "gateway",
+      "to": "sagaorch",
+      "label": "checkout",
+      "variant": "emphasis"
+    },
+    {
+      "id": "saga-client",
+      "from": "sagaorch",
+      "to": "clientsvc",
+      "label": "1. balance",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -18
+    },
+    {
+      "id": "saga-bucket",
+      "from": "sagaorch",
+      "to": "bucketsvc",
+      "label": "2. cart",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 18
+    },
+    {
+      "id": "saga-order",
+      "from": "sagaorch",
+      "to": "ordersvc",
+      "label": "3. order",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "bucket-product",
+      "from": "bucketsvc",
+      "to": "productsvc",
+      "label": "enrich items",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "product-redis",
+      "from": "productsvc",
+      "to": "redis",
+      "label": "cache",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "product-db",
+      "from": "productsvc",
+      "to": "postgres",
+      "label": "catalog SQL",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "ordersvc-db",
+      "from": "ordersvc",
+      "to": "postgres",
+      "label": "order SQL",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "clientsvc-db",
+      "from": "clientsvc",
+      "to": "postgres",
+      "label": "client SQL",
+      "fromSide": "top",
+      "toSide": "top",
+      "via": [[530, 20], [1010, 20]]
+    },
+    {
+      "id": "discount-kafka",
+      "from": "discountsvc",
+      "to": "kafka",
+      "label": "outbox",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "product-kafka",
+      "from": "productsvc",
+      "to": "kafka",
+      "label": "alerts",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "kafka-notif",
+      "from": "kafka",
+      "to": "notifsvc",
+      "label": "event stream",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "via": [[1010, 560], [310, 560]]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Ingress & Service Discovery",
+      "items": [
+        "Spring Cloud Gateway on port 9000 terminates external client traffic",
+        "Netflix Eureka (:8761) provides dynamic microservice registry and health monitoring"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Distributed SAGA Checkout",
+      "items": [
+        "Orchestrated 3-step checkout: Client balance -> Bucket cart -> Order details",
+        "Resilience4j retries with backward compensating transactions on failures"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Event Pipeline & Data Isolation",
+      "items": [
+        "Transactional Outbox in DiscountService publishes events to Apache Kafka",
+        "PostgreSQL 15 with 5 isolated schemas, Redis cache, and STOMP WebSockets"
+      ]
+    }
+  ]
+}
